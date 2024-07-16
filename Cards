@@ -1,0 +1,129 @@
+import random
+
+card_attributes = {
+    'attack': 0,
+    'defense': 0,
+    'cost': 0
+}
+
+class Card:
+    def __init__(self, name, attributes):
+        self.name = name
+        self.attributes = attributes
+
+    def __str__(self):
+        return f"{self.name} ({self.attributes['attack']} ATK, {self.attributes['defense']} DEF, {self.attributes['cost']} COST)"
+
+class Deck:
+    def __init__(self):
+        self.cards = []
+
+    def shuffle(self):
+        random.shuffle(self.cards)
+
+    def draw(self):
+        if self.cards:
+            return self.cards.pop()
+        return None
+
+    def add_card(self, card):
+        self.cards.append(card)
+
+class Hand:
+    def __init__(self):
+        self.cards = []
+
+    def add_card(self, card):
+        self.cards.append(card)
+
+    def remove_card(self, card):
+        self.cards.remove(card)
+
+    def __str__(self):
+        return f"Hand: {', '.join([str(card) for card in self.cards])}"
+
+class Player:
+    def __init__(self, name):
+        self.name = name
+        self.hand = Hand()
+        self.deck = Deck()
+        self.score = 0
+
+    def draw_card(self):
+        card = self.deck.draw()
+        if card:
+            self.hand.add_card(card)
+        return card
+
+    def play_card(self):
+        if self.hand.cards:
+            return self.hand.cards.pop(0)
+        return None
+
+    def __str__(self):
+        return f"{self.name} (Score: {self.score}) - {self.hand}"
+
+def resolve_battle(card1, card2):
+    if card1.attributes['attack'] > card2.attributes['defense']:
+        return card1
+    elif card2.attributes['attack'] > card1.attributes['defense']:
+        return card2
+    return None
+
+def play_game(player1, player2):
+    round_counter = 1
+    while player1.deck.cards and player2.deck.cards:
+        print(f"\nRound {round_counter}")
+        round_counter += 1
+
+        player1.draw_card()
+        player2.draw_card()
+
+        card1 = player1.play_card()
+        card2 = player2.play_card()
+
+        if card1 and card2:
+            print(f"{player1.name} plays {card1}")
+            print(f"{player2.name} plays {card2}")
+
+            winner_card = resolve_battle(card1, card2)
+            if winner_card:
+                if winner_card == card1:
+                    player1.score += 1
+                    print(f"{player1.name} wins this round!")
+                else:
+                    player2.score += 1
+                    print(f"{player2.name} wins this round!")
+            else:
+                print("It's a tie!")
+        else:
+            print("One of the players has run out of cards!")
+            break
+
+    print("\nFinal Scores:")
+    print(f"{player1.name}: {player1.score}")
+    print(f"{player2.name}: {player2.score}")
+
+    if player1.score > player2.score:
+        print(f"{player1.name} wins the game!")
+    elif player2.score > player1.score:
+        print(f"{player2.name} wins the game!")
+    else:
+        print("The game is a tie!")
+
+
+cards = [Card(f"Card {i}", {'attack': random.randint(1, 10), 'defense': random.randint(1, 10), 'cost': random.randint(1, 5)}) for i in range(30)]
+
+
+random.shuffle(cards)
+
+
+player1 = Player("Player 1")
+player2 = Player("Player 2")
+
+for _ in range(15):
+    player1.deck.add_card(cards.pop())
+    player2.deck.add_card(cards.pop())
+
+
+play_game(player1, player2)
