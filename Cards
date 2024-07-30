@@ -1,11 +1,5 @@
 import random
 
-card_attributes = {
-    'attack': 0,
-    'defense': 0,
-    'cost': 0
-}
-
 class Card:
     def __init__(self, name, attributes):
         self.name = name
@@ -55,9 +49,9 @@ class Player:
             self.hand.add_card(card)
         return card
 
-    def play_card(self):
-        if self.hand.cards:
-            return self.hand.cards.pop(0)
+    def play_card(self, card_index):
+        if 0 <= card_index < len(self.hand.cards):
+            return self.hand.cards.pop(card_index)
         return None
 
     def __str__(self):
@@ -72,32 +66,52 @@ def resolve_battle(card1, card2):
 
 def play_game(player1, player2):
     round_counter = 1
-    while player1.deck.cards and player2.deck.cards:
+    while player1.deck.cards or player2.deck.cards or player1.hand.cards or player2.hand.cards:
         print(f"\nRound {round_counter}")
         round_counter += 1
 
-        player1.draw_card()
-        player2.draw_card()
+        while len(player1.hand.cards) < 5 and player1.deck.cards:
+            player1.draw_card()
 
-        card1 = player1.play_card()
-        card2 = player2.play_card()
+        while len(player2.hand.cards) < 5 and player2.deck.cards:
+            player2.draw_card()
 
-        if card1 and card2:
-            print(f"{player1.name} plays {card1}")
-            print(f"{player2.name} plays {card2}")
+        print(f"{player1.name}'s hand: {player1.hand}")
+        print(f"{player2.name}'s hand: {player2.hand}")
 
-            winner_card = resolve_battle(card1, card2)
-            if winner_card:
-                if winner_card == card1:
-                    player1.score += 1
-                    print(f"{player1.name} wins this round!")
-                else:
-                    player2.score += 1
-                    print(f"{player2.name} wins this round!")
+        # Player 1 chooses a card
+        card1 = None
+        while card1 is None:
+            try:
+                card1_index = int(input(f"{player1.name}, choose a card to play (0-{len(player1.hand.cards)-1}): "))
+                card1 = player1.play_card(card1_index)
+            except (ValueError, IndexError):
+                print("Invalid choice. Please try again.")
+
+        # Player 2 chooses a card
+        card2 = None
+        while card2 is None:
+            try:
+                card2_index = int(input(f"{player2.name}, choose a card to play (0-{len(player2.hand.cards)-1}): "))
+                card2 = player2.play_card(card2_index)
+            except (ValueError, IndexError):
+                print("Invalid choice. Please try again.")
+
+        print(f"{player1.name} plays {card1}")
+        print(f"{player2.name} plays {card2}")
+
+        winner_card = resolve_battle(card1, card2)
+        if winner_card:
+            if winner_card == card1:
+                player1.score += 1
+                print(f"{player1.name} wins this round!")
             else:
-                print("It's a tie!")
+                player2.score += 1
+                print(f"{player2.name} wins this round!")
         else:
-            print("One of the players has run out of cards!")
+            print("It's a tie!")
+
+        if not player1.deck.cards and not player2.deck.cards and not player1.hand.cards and not player2.hand.cards:
             break
 
     print("\nFinal Scores:")
@@ -111,12 +125,8 @@ def play_game(player1, player2):
     else:
         print("The game is a tie!")
 
-
 cards = [Card(f"Card {i}", {'attack': random.randint(1, 10), 'defense': random.randint(1, 10), 'cost': random.randint(1, 5)}) for i in range(30)]
-
-
 random.shuffle(cards)
-
 
 player1 = Player("Player 1")
 player2 = Player("Player 2")
@@ -124,6 +134,5 @@ player2 = Player("Player 2")
 for _ in range(15):
     player1.deck.add_card(cards.pop())
     player2.deck.add_card(cards.pop())
-
 
 play_game(player1, player2)
